@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spring Music</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #16213e, #0f3460);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    header .logo {
+      font-size: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: #e94560;
+      letter-spacing: 1px;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+    .api-bar {
+      background: #16213e;
+      padding: 12px 40px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    .api-bar label { font-size: 0.85rem; color: #aaa; }
+
+    .api-bar input {
+      flex: 1;
+      max-width: 360px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #0f3460;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 0.9rem;
+    }
+
+    .api-bar button {
+      padding: 6px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #e94560;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .api-bar button:hover { background: #c73652; }
+
+    .status-badge {
+      margin-left: auto;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: #0f3460;
+      color: #aaa;
+    }
+
+    .status-badge.connected { background: #1b5e20; color: #a5d6a7; }
+    .status-badge.error { background: #b71c1c; color: #ef9a9a; }
+
+    main { padding: 32px 40px; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar h2 { font-size: 1.2rem; color: #e94560; flex: 1; }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #e94560; color: #fff; }
+    .btn-secondary { background: #0f3460; color: #eee; }
+    .btn-danger { background: #c62828; color: #fff; }
+    .btn-sm { padding: 4px 12px; font-size: 0.8rem; }
+
+    .search-box {
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid #0f3460;
+      background: #16213e;
+      color: #eee;
+      font-size: 0.9rem;
+      width: 220px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #16213e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    thead { background: #0f3460; }
+    th {
+      text-align: left;
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { color: #e94560; }
+
+    td {
+      padding: 12px 16px;
+      border-top: 1px solid #1a1a2e;
+      font-size: 0.9rem;
+    }
+
+    tr:hover td { background: rgba(233, 69, 96, 0.07); }
+
+    .genre-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      background: #0f3460;
+      color: #90caf9;
+    }
+
+    .actions { display: flex; gap: 6px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #555;
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 32px;
+      width: 440px;
+      max-width: 95vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .modal h3 { font-size: 1.2rem; color: #e94560; margin-bottom: 20px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.82rem; color: #aaa; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid #0f3460;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 0.9rem;
+    }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f3460;
+      color: #eee;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 200;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-left: 4px solid #43a047; }
+    .toast.error { border-left: 4px solid #e94560; }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: #16213e;
+      border-radius: 10px;
+      padding: 16px 24px;
+      flex: 1;
+      min-width: 140px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .stat-card .value { font-size: 2rem; font-weight: bold; color: #e94560; }
+    .stat-card .label { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎵</div>
+  <div>
+    <h1>Spring Music</h1>
+    <p>Cloud Foundry Sample Application — Album Manager</p>
+  </div>
+</header>
+
+<div class="api-bar">
+  <label>API Base URL:</label>
+  <input type="text" id="apiUrl" value="http://localhost:8080" placeholder="http://localhost:8080" />
+  <button onclick="loadAlbums()">Connect</button>
+  <span class="status-badge" id="statusBadge">Not connected</span>
+</div>
+
+<main>
+  <div class="stats">
+    <div class="stat-card">
+      <div class="value" id="statTotal">—</div>
+      <div class="label">Total Albums</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statArtists">—</div>
+      <div class="label">Unique Artists</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statGenres">—</div>
+      <div class="label">Genres</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <h2>Albums</h2>
+    <input class="search-box" type="text" id="searchBox" placeholder="Search albums..." oninput="filterAlbums()" />
+    <button class="btn btn-secondary" onclick="loadAlbums()">&#8635; Refresh</button>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Add Album</button>
+  </div>
+
+  <table id="albumTable">
+    <thead>
+      <tr>
+        <th onclick="sortBy('title')">Title &#8597;</th>
+        <th onclick="sortBy('artist')">Artist &#8597;</th>
+        <th onclick="sortBy('releaseYear')">Year &#8597;</th>
+        <th onclick="sortBy('genre')">Genre &#8597;</th>
+        <th onclick="sortBy('trackCount')">Tracks &#8597;</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="albumBody">
+      <tr>
+        <td colspan="6">
+          <div class="empty-state">
+            <div class="icon">🎧</div>
+            <p>Connect to your Spring Music API to load albums.</p>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Add Album</h3>
+    <input type="hidden" id="albumId" />
+    <div class="form-group">
+      <label>Title *</label>
+      <input type="text" id="fieldTitle" placeholder="e.g. Kind of Blue" />
+    </div>
+    <div class="form-group">
+      <label>Artist *</label>
+      <input type="text" id="fieldArtist" placeholder="e.g. Miles Davis" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Release Year</label>
+        <input type="text" id="fieldYear" placeholder="e.g. 1959" maxlength="4" />
+      </div>
+      <div class="form-group">
+        <label>Track Count</label>
+        <input type="number" id="fieldTracks" placeholder="e.g. 6" min="0" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Genre</label>
+      <select id="fieldGenre">
+        <option value="">Select genre...</option>
+        <option>Jazz</option>
+        <option>Rock</option>
+        <option>Pop</option>
+        <option>Classical</option>
+        <option>Electronic</option>
+        <option>Hip-Hop</option>
+        <option>R&B</option>
+        <option>Country</option>
+        <option>Blues</option>
+        <option>Folk</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAlbum()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let albums = [];
+  let sortKey = 'title';
+  let sortAsc = true;
+
+  function apiUrl() {
+    return document.getElementById('apiUrl').value.replace(/\/$/, '');
+  }
+
+  async function loadAlbums() {
+    const badge = document.getElementById('statusBadge');
+    badge.textContent = 'Connecting...';
+    badge.className = 'status-badge';
+    try {
+      const res = await fetch(apiUrl() + '/albums');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      albums = await res.json();
+      badge.textContent = 'Connected';
+      badge.className = 'status-badge connected';
+      renderTable();
+      updateStats();
+    } catch (e) {
+      badge.textContent = 'Error: ' + e.message;
+      badge.className = 'status-badge error';
+      showToast('Failed to connect: ' + e.message, 'error');
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = albums.length;
+    document.getElementById('statArtists').textContent = new Set(albums.map(a => a.artist)).size;
+    document.getElementById('statGenres').textContent = new Set(albums.map(a => a.genre).filter(Boolean)).size;
+  }
+
+  function filterAlbums() { renderTable(); }
+
+  function sortBy(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = true; }
+    renderTable();
+  }
+
+  function renderTable() {
+    const q = document.getElementById('searchBox').value.toLowerCase();
+    let filtered = albums.filter(a =>
+      (a.title || '').toLowerCase().includes(q) ||
+      (a.artist || '').toLowerCase().includes(q) ||
+      (a.genre || '').toLowerCase().includes(q)
+    );
+
+    filtered.sort((a, b) => {
+      let va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
+      if (sortKey === 'trackCount') { va = +va; vb = +vb; }
+      return sortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+
+    const body = document.getElementById('albumBody');
+    if (filtered.length === 0) {
+      body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">🎵</div><p>No albums found.</p></div></td></tr>`;
+      return;
+    }
+
+    body.innerHTML = filtered.map(a => `
+      <tr>
+        <td><strong>${esc(a.title)}</strong></td>
+        <td>${esc(a.artist)}</td>
+        <td>${esc(a.releaseYear)}</td>
+        <td>${a.genre ? `<span class="genre-badge">${esc(a.genre)}</span>` : '—'}</td>
+        <td>${a.trackCount || '—'}</td>
+        <td class="actions">
+          <button class="btn btn-secondary btn-sm" onclick="openEditModal('${esc(a.id)}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAlbum('${esc(a.id)}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Album';
+    document.getElementById('albumId').value = '';
+    ['Title','Artist','Year','Tracks'].forEach(f => document.getElementById('field'+f).value = '');
+    document.getElementById('fieldGenre').value = '';
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function openEditModal(id) {
+    const a = albums.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('modalTitle').textContent = 'Edit Album';
+    document.getElementById('albumId').value = a.id;
+    document.getElementById('fieldTitle').value = a.title || '';
+    document.getElementById('fieldArtist').value = a.artist || '';
+    document.getElementById('fieldYear').value = a.releaseYear || '';
+    document.getElementById('fieldTracks').value = a.trackCount || '';
+    document.getElementById('fieldGenre').value = a.genre || '';
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  async function saveAlbum() {
+    const id = document.getElementById('albumId').value;
+    const title = document.getElementById('fieldTitle').value.trim();
+    const artist = document.getElementById('fieldArtist').value.trim();
+    if (!title || !artist) { showToast('Title and Artist are required.', 'error'); return; }
+
+    const payload = {
+      id: id || undefined,
+      title,
+      artist,
+      releaseYear: document.getElementById('fieldYear').value.trim(),
+      trackCount: parseInt(document.getElementById('fieldTracks').value) || 0,
+      genre: document.getElementById('fieldGenre').value,
+    };
+
+    const method = id ? 'POST' : 'PUT';
+    try {
+      const res = await fetch(apiUrl() + '/albums', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      closeModal();
+      showToast(id ? 'Album updated.' : 'Album added.', 'success');
+      await loadAlbums();
+    } catch (e) {
+      showToast('Error saving album: ' + e.message, 'error');
+    }
+  }
+
+  async function deleteAlbum(id) {
+    if (!confirm('Delete this album?')) return;
+    try {
+      const res = await fetch(apiUrl() + '/albums/' + id, { method: 'DELETE' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      showToast('Album deleted.', 'success');
+      await loadAlbums();
+    } catch (e) {
+      showToast('Error deleting album: ' + e.message, 'error');
+    }
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.className = 'toast ' + type, 3000);
+  }
+
+  // Close modal on overlay click
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+</script>
+</body>
+</html>
